@@ -94,5 +94,5 @@ todo-list-app/
 You can download or clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/todo-list-app.git
-cd todo-list-app
+git clone https://github.com/yourusername/To-Do_List_App.git
+cd To-Do_List_App
