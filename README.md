@@ -50,16 +50,16 @@ This app allows users to manage their daily tasks efficiently through a responsi
 
 ## 📁 Project Structure
 
+```plaintext
 todo-list-app/
-├── index.html # Signup/Login page
-├── todo.html # Main to-do app interface
-├── login.css # Styling for login/signup page
-├── style.css # Styling for main to-do app
-├── login.js # Logic for signup/login/logout
-├── script.js # Task management logic
-└── README.md # Project documentation
-
-
+├── index.html       # Signup/Login page
+├── todo.html        # Main to-do app interface
+├── login.css        # Styling for login/signup page
+├── style.css        # Styling for main to-do app
+├── login.js         # Logic for signup/login/logout
+├── script.js        # Task management logic
+└── README.md        # Project documentation
+```
 ---
 
 ## 💻 Technologies Used
