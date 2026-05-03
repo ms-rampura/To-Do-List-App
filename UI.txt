@@ -1,0 +1,2331 @@
+﻿AI_LAB FINAL PRACTICE
+
+
+EDA:
+#step 1:
+import pandas as pd
+
+
+df = pd.read_csv("data.csv")
+
+
+print(df.head())
+print(df.shape)
+df.info()
+print(df.isnull().sum()) #finds the null values
+
+
+#step 2:
+num_cols = df.select_dtypes(include=['int64', 'float64'])
+df[num_cols.columns] = num_cols.fillna(num_cols.mean())
+
+
+# Fill categorical columns with mode
+cat_cols = df.select_dtypes(include=['object'])
+df[cat_cols.columns] = cat_cols.fillna(cat_cols.mode().iloc[0])
+# Verify
+print(df.isnull().sum())
+
+
+#step 3:
+df = pd.get_dummies(df, drop_first=True)
+
+
+#Step 4: Plotting Graphs
+plt.hist(df['age'], bins=20)
+plt.xlabel("Age")
+plt.ylabel("Frequency")
+plt.title("Distribution of Age")
+plt.show()
+
+
+sns.boxplot(x=df['salary'])
+plt.title("Boxplot of Salary")
+plt.show()
+
+
+plt.scatter(df['study_hours'], df['final_score'])
+plt.xlabel("Study Hours")
+plt.ylabel("Final Score")
+plt.title("Study Hours vs Final Score")
+plt.show()
+
+
+sns.countplot(x='churn', data=df)
+plt.title("Churn Count")
+plt.show()
+sns.barplot(x='contract_type', y='monthly_charges', data=df)
+plt.title("Monthly Charges by Contract Type")
+plt.show()
+
+
+plt.figure(figsize=(8,6))
+sns.heatmap(df.corr(), annot=True, cmap='coolwarm')
+plt.title("Correlation Heatmap")
+plt.show()
+
+
+# Histogram
+df['column'].hist()
+plt.show()
+
+
+# Boxplot
+sns.boxplot(x=df['column'])
+plt.show()
+
+
+# Countplot
+sns.countplot(x='target', data=df)
+plt.show()
+
+
+# Heatmap
+sns.heatmap(df.corr(), annot=True)
+plt.show()
+
+
+1️⃣ Import Libraries
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+________________
+
+
+2️⃣ Load Dataset
+df = pd.read_csv("data.csv")
+✔️ Correct file loading
+________________
+
+
+3️⃣ Preview the Dataset
+df.head()
+df.tail()
+✔️ Understand sample records
+✔️ Check column values
+________________
+
+
+4️⃣ Dataset Size (Shape)
+df.shape
+✔️ Number of rows & columns
+________________
+
+
+5️⃣ Column Information & Data Types
+df.info()
+✔️ Data types
+✔️ Non-null counts
+✔️ Memory usage
+________________
+
+
+6️⃣ Summary Statistics (Numerical Columns)
+df.describe()
+✔️ Mean, min, max, std
+✔️ Spot outliers quickly
+________________
+
+
+7️⃣ Check Missing Values
+df.isnull().sum()
+(Optional but good)
+(df.isnull().sum() / len(df)) * 100
+✔️ Identify columns needing preprocessing
+________________
+
+
+8️⃣ Handle Missing Values
+# Numerical → mean / median
+num_cols = df.select_dtypes(include=['int64','float64'])
+df[num_cols.columns] = num_cols.fillna(num_cols.mean())
+
+
+# Categorical → mode
+cat_cols = df.select_dtypes(include=['object'])
+df[cat_cols.columns] = cat_cols.fillna(cat_cols.mode().iloc[0])
+✔️ Clean dataset
+________________
+
+
+9️⃣ Check for Duplicate Records
+df.duplicated().sum()
+(Optional)
+df.drop_duplicates(inplace=True)
+________________
+
+
+🔟 Univariate Analysis (Single Feature)
+Histogram
+df['column'].hist()
+plt.show()
+Boxplot
+sns.boxplot(x=df['column'])
+plt.show()
+✔️ Distribution & outliers
+________________
+
+
+1️⃣1️⃣ Categorical Feature Analysis
+sns.countplot(x='categorical_column', data=df)
+plt.show()
+✔️ Frequency of categories
+________________
+
+
+1️⃣2️⃣ Bivariate Analysis (Two Features)
+Scatter Plot
+plt.scatter(df['feature1'], df['feature2'])
+plt.show()
+Bar Plot
+sns.barplot(x='category', y='value', data=df)
+plt.show()
+✔️ Relationships between variables
+________________
+
+
+1️⃣3️⃣ Target Variable Analysis (VERY IMPORTANT)
+Classification
+sns.countplot(x='target', data=df)
+plt.show()
+Regression
+df['target'].hist()
+plt.show()
+✔️ Class balance / distribution
+________________
+
+
+1️⃣4️⃣ Correlation Analysis
+sns.heatmap(df.corr(), annot=True)
+plt.show()        
+✔️ Feature relationships
+✔️ Feature selection help
+________________
+
+
+1️⃣5️⃣ Encode Categorical Variables
+df = pd.get_dummies(df, drop_first=True)
+✔️ Convert to numerical form
+________________
+
+
+1️⃣6️⃣ Final Check Before Modeling
+df.info()
+df.isnull().sum()
+✔️ No missing values
+✔️ All numeric columns
+________________
+
+
+🔥 ONE-PAGE EXAM EDA TEMPLATE (GOLD)
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+df = pd.read_csv("data.csv")
+
+
+df.head()
+df.shape
+df.info()
+df.describe()
+
+
+print(df.isnull().sum())
+
+
+sns.countplot(x='target', data=df)
+plt.show()
+
+
+sns.heatmap(df.corr(), annot=True)
+plt.show()
+________________
+
+
+
+
+
+
+1️⃣ Separate Features & Target
+X = df.drop('target', axis=1)   # replace 'target'
+y = df['target']
+________________
+
+
+2️⃣ Train–Test Split
+from sklearn.model_selection import train_test_split
+
+
+X_train, X_test, y_train, y_test = train_test_split(
+   X, y, test_size=0.2, random_state=42
+)
+________________
+
+
+🟢 1. LINEAR REGRESSION (Regression Problem)
+When to Use
+* Continuous target variable
+(price, score, salary)
+________________
+
+
+Model Implementation
+from sklearn.linear_model import LinearRegression
+
+
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+
+y_pred = model.predict(X_test)
+________________
+
+
+Evaluation
+from sklearn.metrics import mean_absolute_error, r2_score
+
+
+print("MAE:", mean_absolute_error(y_test, y_pred))
+print("R2 Score:", r2_score(y_test, y_pred))
+________________
+
+
+🟢 2. SUPPORT VECTOR MACHINE (SVM)
+When to Use
+   * Classification or regression
+   * Works well with small–medium datasets
+________________
+
+
+⚠️ Important: Feature Scaling Required
+from sklearn.preprocessing import StandardScaler
+
+
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+________________
+
+
+A. SVM for Classification (SVC)
+from sklearn.svm import SVC
+
+
+model = SVC(kernel='linear')
+model.fit(X_train, y_train)
+
+
+y_pred = model.predict(X_test)
+________________
+
+
+Evaluation
+from sklearn.metrics import accuracy_score, confusion_matrix
+
+
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print(confusion_matrix(y_test, y_pred))
+________________
+
+
+B. SVM for Regression (SVR) (optional for exams)
+from sklearn.svm import SVR
+
+
+model = SVR(kernel='rbf')
+model.fit(X_train, y_train)
+
+
+y_pred = model.predict(X_test)
+________________
+
+
+🟢 3. DECISION TREE CLASSIFIER (Classification)
+When to Use
+   * Categorical or numerical features
+   * No scaling required
+________________
+
+
+Model Implementation
+from sklearn.tree import DecisionTreeClassifier
+
+
+model = DecisionTreeClassifier(max_depth=5, random_state=42)
+model.fit(X_train, y_train)
+
+
+y_pred = model.predict(X_test)
+________________
+
+
+Evaluation
+from sklearn.metrics import accuracy_score, confusion_matrix
+
+
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print(confusion_matrix(y_test, y_pred))
+
+
+SUPERVISED LEARNING:
+import pandas as pd
+from matplotlib import pyplot as plt
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score
+from sklearn.metrics import mean_absolute_error
+from sklearn.preprocessing import LabelEncoder
+import seaborn as sns
+
+
+from Task1 import X_train, y_train, feature_importance
+
+
+df = pd.read_csv("Student_Performance.csv")
+print(df.head())
+print(df.isnull().sum())
+print("\n---No Null Data Entries---\n")
+le = LabelEncoder()
+df['Extracurricular Activities'] = le.fit_transform(df['Extracurricular Activities'])
+correlation = df.corr()['Performance Index'].sort_values(ascending=False)
+print(correlation)
+
+
+X=df.drop("Performance Index",axis=1)
+y=df["Performance Index"]
+X_train ,X_test,y_train,y_test = train_test_split(X,y,test_size=0.2,random_state=42)
+model = LinearRegression()
+model.fit(X_train,y_train)
+y_pred = model.predict(X_test)
+mse = mean_squared_error(y_test,y_pred)
+mae = mean_absolute_error(y_test,y_pred)
+r2 = r2_score(y_test,y_pred)
+
+
+print("\nModel Evaluation Metrics:")
+print("MAE :", mae)
+print("RMSE:", mse)
+print("R²  :", r2)
+
+
+new_student = pd.DataFrame({
+   "Hours Studied": [7],
+   "Previous Scores": [85],
+   "Extracurricular Activities": [1],  # Yes = 1, No = 0
+   "Sleep Hours": [7],
+   "Sample Question Papers Practiced": [5]
+})
+feature_importance = pd.Series(model.coef_,index=X.columns)
+print(feature_importance.sort_values(ascending=False))
+print("\n---The most important features affecting student performance is Hours Studied---\n")
+new_student_score = model.predict(new_student)
+print("\n---New Student Predicted Score: ", new_student_score,"---\n")
+
+
+
+
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report
+
+
+df = pd.read_csv("loan_data.csv")
+print(df.head())
+for col in df.columns:
+   if df[col].dtype == "object":
+       df[col].fillna(df[col].mode(), inplace=True)
+   else:
+       df[col].fillna(df[col].mean(), inplace=True)
+
+
+for col in df.columns:
+   if df[col].dtype == "object":
+       le = LabelEncoder()
+       df[col] = le.fit_transform(df[col])
+
+
+X = df.drop('loan_status',axis=1)
+y = df['loan_status']
+X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.2,random_state=42)
+model = LogisticRegression(max_iter=1000)
+model.fit(X_train,y_train)
+y_pred = model.predict(X_test)
+print("\nModel Evaluation Metrics:")
+print("Accuracy :", accuracy_score(y_test, y_pred))
+print("Precision:", precision_score(y_test, y_pred))
+print("Recall   :", recall_score(y_test, y_pred))
+print("F1-score :", f1_score(y_test, y_pred))
+
+
+new_applicant = X.iloc[[0]]  # using first row structure safely
+prediction = model.predict(new_applicant)
+print("\nLoan Approval Prediction for New Applicant:")
+print("Approved" if prediction[0] == 1 else "Rejected")
+
+
+import pandas as pd
+import numpy as np
+
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import (
+   confusion_matrix,
+   accuracy_score,
+   precision_score,
+   recall_score,
+   f1_score,
+   classification_report
+)
+
+
+df = pd.read_csv("Telco-Customer-Churn.csv")
+
+
+for col in df.columns:
+   if df[col].dtype == "object":
+       df[col] = df[col].fillna(df[col].mode()[0])
+   else:
+       df[col] = df[col].fillna(df[col].mean())
+
+
+numerical_cols = df.select_dtypes(include=["int64", "float64"]).columns
+
+
+for col in numerical_cols:
+   Q1 = df[col].quantile(0.25)
+   Q3 = df[col].quantile(0.75)
+   IQR = Q3 - Q1
+   lower = Q1 - 1.5 * IQR
+   upper = Q3 + 1.5 * IQR
+   df[col] = np.clip(df[col], lower, upper)
+
+
+label_encoders = {}
+
+
+for col in df.columns:
+   if df[col].dtype == "object":
+       le = LabelEncoder()
+       df[col] = le.fit_transform(df[col])
+       label_encoders[col] = le
+
+
+target_column = "Churn"   # standard in telco dataset
+X = df.drop(target_column, axis=1)
+y = df[target_column]
+
+
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+
+X_train, X_test, y_train, y_test = train_test_split(
+   X_scaled, y, test_size=0.2, random_state=42
+)
+
+
+svm_model = SVC(kernel="linear")
+svm_model.fit(X_train, y_train)
+
+
+svm_pred = svm_model.predict(X_test)
+
+
+rf_model = RandomForestClassifier(n_estimators=100, random_state=42)
+rf_model.fit(X_train, y_train)
+
+
+rf_pred = rf_model.predict(X_test)
+
+
+print("\nConfusion Matrix:")
+print(confusion_matrix(y_test, rf_pred))
+
+
+print("\nEvaluation Metrics:")
+print("Accuracy :", accuracy_score(y_test, rf_pred))
+print("Precision:", precision_score(y_test, rf_pred))
+print("Recall   :", recall_score(y_test, rf_pred))
+print("F1-score :", f1_score(y_test, rf_pred))
+
+
+print("\nClassification Report:")
+print(classification_report(y_test, rf_pred))
+
+
+feature_importance = pd.Series(
+   rf_model.feature_importances_,
+   index=X.columns
+).sort_values(ascending=False)
+print(feature_importance)
+new_customer = X.iloc[[0]]        # structure-safe sample
+new_customer_scaled = scaler.transform(new_customer)
+
+
+prediction = rf_model.predict(new_customer_scaled)
+
+
+print("\nChurn Prediction for New Customer:")
+print("Will Churn" if prediction[0] == 1 else "Will Stay")
+
+
+
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error, r2_score
+
+
+df = pd.read_csv("student_scores.csv")
+print("Dataset Shape:", df.shape)
+df.info()
+print(df.isnull().sum())
+
+
+plt.hist(df['final_score'], bins=20)
+plt.xlabel("Final Score")
+plt.ylabel("Frequency")
+plt.title("Distribution of Final Score")
+plt.show()
+
+
+plt.scatter(df['study_hours'], df['final_score'])
+plt.xlabel("Study Hours")
+plt.ylabel("Final Score")
+plt.title("Study Hours vs Final Score")
+plt.show()
+
+
+plt.figure(figsize=(6,4))
+sns.heatmap(df.corr(), annot=True, cmap='coolwarm')
+plt.title("Correlation Heatmap")
+plt.show()
+
+
+num_cols = df.select_dtypes(include=['int64', 'float64'])
+df[num_cols.columns] = num_cols.fillna(num_cols.mean())
+
+
+X = df.drop(['student_id', 'final_score'], axis=1)
+y = df['final_score']
+
+
+X_train, X_test, y_train, y_test = train_test_split(
+   X, y,
+   test_size=0.2,
+   random_state=42
+)
+
+
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+
+y_pred = model.predict(X_test)
+
+
+mae = mean_absolute_error(y_test, y_pred)
+print("Mean Absolute Error (MAE):", mae)
+
+
+r2 = r2_score(y_test, y_pred)
+print("R² Score:", r2)
+
+
+
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+
+df = pd.read_csv("Telco-Customer-Churn.csv")
+sns.countplot(x='Churn', data=df)
+plt.title("Churn Distribution")
+plt.show()
+
+
+sns.boxplot(x='Churn', y='MonthlyCharges', data=df)
+plt.title("Monthly Charges vs Churn")
+plt.show()
+
+
+sns.countplot(x='Contract', data=df)
+plt.title("Contract Type Distribution")
+plt.show()
+
+
+df_num = df.select_dtypes(include=['int64', 'float64'])
+df_num.hist(figsize=(6,4),bins=50)
+plt.show()
+print(df.isnull().sum())
+# Numerical → mean
+num_cols = df.select_dtypes(include=['int64', 'float64'])
+df[num_cols.columns] = num_cols.fillna(num_cols.mean())
+
+
+# Categorical → mode
+cat_cols = df.select_dtypes(include=['object'])
+df[cat_cols.columns] = df[cat_cols.columns].fillna(cat_cols.mode().iloc[0])
+
+
+df = pd.get_dummies(df, drop_first=True)
+X = df.drop('churn_Yes', axis=1)
+y = df['churn_Yes']
+
+
+X_train, X_test, y_train, y_test = train_test_split(
+   X, y,
+   test_size=0.2,
+   random_state=42,
+   stratify=y
+)
+
+
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+
+model = LogisticRegression(class_weight='balanced', max_iter=1000)
+model.fit(X_train_scaled, y_train)
+
+
+y_pred = model.predict(X_test_scaled)
+
+
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+
+
+print("Classification Report:\n", classification_report(y_test, y_pred))
+
+
+
+
+
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.metrics import accuracy_score, confusion_matrix
+
+
+df = pd.read_csv("loan_data.csv")
+print(df.head())
+print(df.info())
+print(df.isnull().sum())
+
+
+sns.countplot(x='loan_status', data=df)
+plt.title("Loan Status Distribution")
+plt.show()
+
+
+plt.hist(df['credit_score'], bins=20)
+plt.xlabel("Credit Score")
+plt.ylabel("Frequency")
+plt.title("Distribution of Credit Score")
+plt.show()
+
+
+sns.boxplot(x='loan_status', y='income', data=df)
+plt.title("Income vs Loan Status")
+plt.show()
+
+
+# Numerical → mean
+num_cols = df.select_dtypes(include=['int64', 'float64'])
+df[num_cols.columns] = num_cols.fillna(num_cols.mean())
+
+
+# Categorical → mode
+df['loan_status'] = df['loan_status'].fillna(df['loan_status'].mode()[0])
+
+
+le = LabelEncoder()
+df['loan_status'] = le.fit_transform(df['loan_status'])
+
+
+X = df.drop('loan_status', axis=1)
+y = df['loan_status']
+
+
+scaler = StandardScaler()
+X = scaler.fit_transform(X)
+
+
+X_train, X_test, y_train, y_test = train_test_split(
+   X, y,
+   test_size=0.2,
+   random_state=42,
+   stratify=y
+)
+
+
+model = DecisionTreeClassifier(
+   max_depth=5,
+   random_state=42
+)
+
+
+model.fit(X_train, y_train)
+
+
+y_pred = model.predict(X_test)
+print("Accuracy Score:", accuracy_score(y_test, y_pred))
+print("Confusion Matrix:")
+print(confusion_matrix(y_test, y_pred))
+
+
+UNSUPERVISED LEARNING:
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+
+
+df = pd.read_csv('Mall_Customers.csv')
+df.columns = df.columns.str.strip()   # safety
+
+
+df['Genre'] = df['Genre'].map({'Male': 0, 'Female': 1})
+
+
+X = df.drop(columns=['CustomerID']).values
+
+
+kmeans_no_scale = KMeans(n_clusters=5, init='k-means++', random_state=42)
+labels_no_scale = kmeans_no_scale.fit_predict(X)
+
+
+plt.figure()
+plt.scatter(df['Annual Income (k$)'],
+           df['Spending Score (1-100)'],
+           c=labels_no_scale)
+plt.title('K-Means WITHOUT Scaling')
+plt.xlabel('Annual Income (k$)')
+plt.ylabel('Spending Score (1–100)')
+plt.show()
+
+
+# Separate Age (not scaled)
+age = df[['Age']].values
+
+
+# Features to scale
+features_to_scale = df[['Genre', 'Annual Income (k$)', 'Spending Score (1-100)']].values
+
+
+# Scale selected features
+scaler = StandardScaler()
+scaled_features = scaler.fit_transform(features_to_scale)
+# Scale
+
+
+# K-Means
+kmeans_scaled = KMeans(n_clusters=5, init='k-means++', random_state=42)
+labels_scaled = kmeans_scaled.fit_predict(scaled_features)
+
+
+plt.figure()
+plt.scatter(df['Annual Income (k$)'],
+           df['Spending Score (1-100)'],
+           c=labels_scaled)
+plt.title('K-Means WITH Scaling (Except Age)')
+plt.xlabel('Annual Income (k$)')
+plt.ylabel('Spending Score (1–100)')
+plt.show()
+
+
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
+
+
+# -----------------------------
+# Create DataFrame
+# -----------------------------
+data = {
+   'vehicle_serial_no': [5, 3, 8, 2, 4, 7, 6, 10, 1, 9],
+   'mileage': [150000, 120000, 250000, 80000, 100000, 220000, 180000, 300000, 75000, 280000],
+   'fuel_efficiency': [15, 18, 10, 22, 20, 12, 16, 8, 24, 9],
+   'maintenance_cost': [5000, 4000, 7000, 2000, 3000, 6500, 5500, 8000, 1500, 7500],
+   'vehicle_type': ['SUV', 'Sedan', 'Truck', 'Hatchback', 'Sedan',
+                    'Truck', 'SUV', 'Truck', 'Hatchback', 'SUV']
+}
+
+
+df = pd.DataFrame(data)
+
+
+# -----------------------------
+# One-hot encode vehicle_type
+# -----------------------------
+df_encoded = pd.get_dummies(df, columns=['vehicle_type'])
+
+
+# Drop ID
+X = df_encoded.drop(columns=['vehicle_serial_no'])
+
+
+# -----------------------------
+# K-Means WITHOUT scaling
+# -----------------------------
+kmeans_no_scale = KMeans(n_clusters=2, init='k-means++', random_state=42)
+labels_no_scale = kmeans_no_scale.fit_predict(X)
+
+
+# -----------------------------
+# K-Means WITH scaling
+# (scale numeric features only)
+# -----------------------------
+numeric_cols = ['mileage', 'fuel_efficiency', 'maintenance_cost']
+dummy_cols = [col for col in X.columns if col not in numeric_cols]
+
+
+scaler = StandardScaler()
+X_scaled_numeric = scaler.fit_transform(X[numeric_cols])
+
+
+# Combine scaled numeric + unscaled categorical
+X_scaled = np.hstack((X_scaled_numeric, X[dummy_cols].values))
+
+
+kmeans_scaled = KMeans(n_clusters=2, init='k-means++', random_state=42)
+labels_scaled = kmeans_scaled.fit_predict(X_scaled)
+
+
+# -----------------------------
+# Visualization (numeric axes only)
+# -----------------------------
+plt.figure()
+plt.scatter(df['mileage'], df['fuel_efficiency'], c=labels_no_scale)
+plt.title('K-Means WITHOUT Scaling')
+plt.xlabel('Mileage')
+plt.ylabel('Fuel Efficiency')
+plt.show()
+# Fix: Only inverse_transform the first 3 columns (the numeric ones)
+centroid_original = scaler.inverse_transform(kmeans_scaled.cluster_centers_[:, :3])
+
+
+# Then, when plotting the centroids:
+
+
+plt.figure()
+plt.scatter(df['mileage'], df['fuel_efficiency'], c=labels_scaled)
+plt.scatter(centroid_original[:, 0], centroid_original[:, 1], marker='x', s=200, c='red', label='Centroids')
+plt.title('K-Means WITH Scaling')
+plt.xlabel('Mileage')
+plt.ylabel('Fuel Efficiency')
+plt.show()
+
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+data = {
+   'student_id': [101, 102, 103, 104, 105, 106, 107, 108, 109, 110],
+   'GPA': [3.8, 2.5, 3.2, 1.9, 3.6, 2.8, 3.9, 2.1, 3.0, 2.4],
+   'study_hours': [20, 10, 15, 5, 18, 12, 22, 6, 14, 9],
+   'attendance_rate': [95, 70, 85, 60, 90, 75, 98, 65, 80, 72]
+}
+
+
+df = pd.DataFrame(data)
+print(df)
+features = df[['GPA', 'study_hours', 'attendance_rate']]
+scaler = StandardScaler()
+scaled_features = scaler.fit_transform(features)
+wcss = []
+
+
+for k in range(2, 7):
+   kmeans = KMeans(n_clusters=k, random_state=42)
+   kmeans.fit(scaled_features)
+   wcss.append(kmeans.inertia_)
+
+
+plt.figure()
+plt.plot(range(2, 7), wcss, marker='o')
+plt.title('Elbow Method for Optimal K')
+plt.xlabel('Number of Clusters (K)')
+plt.ylabel('WCSS')
+plt.show()
+kmeans = KMeans(n_clusters=3, random_state=42)
+df['Cluster'] = kmeans.fit_predict(scaled_features)
+print("\nFinal Student Clustering Result:\n")
+print(df[['student_id', 'GPA', 'study_hours', 'attendance_rate', 'Cluster']])
+plt.figure()
+plt.scatter(df['study_hours'], df['GPA'], c=df['Cluster'])
+centroids = scaler.inverse_transform(kmeans.cluster_centers_)
+plt.scatter(centroids[:, 1], centroids[:, 0],
+           c='red', marker='X', label='Centroids')
+
+
+plt.xlabel("Study Hours")
+plt.ylabel("GPA")
+plt.title("Clusters with Centroids")
+plt.legend()
+plt.show()
+
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
+
+
+df = pd.read_csv("fitness_data.csv")  # replace with your file
+print(df.head())
+
+
+print(df.isnull().sum())
+
+
+df.fillna(df.mean(numeric_only=True), inplace=True)
+df.drop_duplicates(inplace=True)
+# Example: remove negative values if any (sensor errors)
+numeric_cols = ['Steps', 'Workout_Duration', 'Calories_Burned', 'Heart_Rate', 'Sleep_Hours']
+
+
+for col in numeric_cols:
+   df = df[df[col] > 0]
+print(df.describe())
+
+
+df[numeric_cols].hist(figsize=(10, 8))
+plt.suptitle("Feature Distributions")
+plt.show()
+
+
+plt.scatter(df['Steps'], df['Calories_Burned'])
+plt.xlabel("Step Count")
+plt.ylabel("Calories Burned")
+plt.title("Steps vs Calories Burned")
+plt.show()
+
+
+X = df[numeric_cols]
+
+
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+
+wcss = []
+
+
+for k in range(2, 7):
+   kmeans = KMeans(n_clusters=k, random_state=42)
+   kmeans.fit(X_scaled)
+   wcss.append(kmeans.inertia_)
+
+
+plt.plot(range(2, 7), wcss, marker='o')
+plt.title("Elbow Method")
+plt.xlabel("K")
+plt.ylabel("WCSS")
+plt.show()
+kmeans = KMeans(n_clusters=3, random_state=42)
+df['Cluster'] = kmeans.fit_predict(X_scaled)
+centroids = scaler.inverse_transform(kmeans.cluster_centers_)
+
+
+centroids_df = pd.DataFrame(centroids, columns=numeric_cols)
+print("Cluster Centers:\n")
+print(centroids_df)
+
+
+plt.figure()
+
+
+plt.scatter(df['Steps'], df['Calories_Burned'], c=df['Cluster'])
+
+
+plt.xlabel("Step Count")
+plt.ylabel("Calories Burned")
+plt.title("User Clusters (Fitness Behavior)")
+
+
+# plot centroids
+plt.scatter(centroids[:, 0], centroids[:, 2],
+           c='red', marker='X', s=200, label='Centroids')
+
+
+plt.legend()
+plt.show()
+
+
+CSP:
+
+
+from ortools.sat.python import cp_model
+
+
+# Create model
+model = cp_model.CpModel()
+
+
+# Variables: 3 classes, slots 1 to 3
+cl = [model.NewIntVar(1, 3, f'C_{i+1}') for i in range(3)]
+
+
+# Constraints
+model.AddAllDifferent(cl)   # No two classes share same slot
+model.Add(cl[0] != 2)       # C1 cannot be in slot 2
+model.Add(cl[1] != 3)       # C2 cannot be in slot 3
+
+
+# Solve
+solver = cp_model.CpSolver()
+status = solver.Solve(model)
+
+
+if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+   print("Solution found:")
+   print("CLASS   SLOT")
+   for i in range(3):
+       print(f"C{i+1}      {solver.Value(cl[i])}")
+else:
+   print("No solution found")
+
+
+from ortools.sat.python import cp_model
+model = cp_model.CpModel()
+
+
+colors = {0:"Red",1:"Green"}
+
+
+A = model.NewIntVar(0,1,'A')
+B = model.NewIntVar(0,1,'B')
+C = model.NewIntVar(0,1,'C')
+
+
+model.add(A!=B)
+model.add(B!=C)
+
+
+solver = cp_model.CpSolver()
+status = solver.Solve(model)
+if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+   print("Solution found:")
+   print("A: ",colors[solver.Value(A)])
+   print("B: ",colors[solver.Value(B)])
+   print("C: ",colors[solver.Value(C)])
+else:
+   print("No solution found")
+
+
+from ortools.sat.python import cp_model
+model = cp_model.CpModel()
+
+
+workers = 3
+jobs = 3
+worker_job = [model.NewIntVar(1,jobs,f'j_{i}') for i in range(jobs)]
+
+
+model.add_all_different(worker_job)
+solver = cp_model.CpSolver()
+status = solver.Solve(model)
+if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+   print("Solution found:")
+   print("Workers    Jobs")
+   for i in range(jobs):
+       print(f"W{i+1}          {solver.Value(worker_job[i])}")
+else:
+   print("No solution found")
+
+
+from ortools.sat.python import cp_model
+model = cp_model.CpModel()
+num_exams = 4
+num_slots = 3
+
+
+Exams = [model.NewIntVar(1,num_slots,f'Exam_{i}') for i in range(num_exams)]
+
+
+conflicts = [
+   (0,1),
+   (1,2),
+   (2,3),
+]
+for e1,e2 in conflicts:
+   model.add(Exams[e1]!=Exams[e2])
+
+
+
+
+solver = cp_model.CpSolver()
+status = solver.Solve(model)
+if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+   print("Solution found:")
+   print("Exams    Slots")
+   for i in range(num_exams):
+       print(f'Exam{i+1}      {solver.Value(Exams[i])}')
+else:
+   print("No solution found")
+
+
+
+
+from ortools.sat.python import cp_model
+model = cp_model.CpModel()
+
+
+N = 10
+Q = [model.NewIntVar(0,N-1,f'Q_{i}') for i in range(N)]
+model.AddAllDifferent(Q)
+model.AddAllDifferent([Q[i]+i for i in range(N)])
+model.AddAllDifferent([Q[i]-i for i in range(N)])
+solver = cp_model.CpSolver()
+status = solver.Solve(model)
+if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+   # for r in range(N):
+   #     for c in range(N):
+   #         if solver.Value(Q[c]) == r:
+   #             print("Q", end=" ")
+   #         else:
+   #             print(".", end=" ")
+   #     print()
+   print("Solution found:")
+   for i in range(N):
+       print(solver.Value(Q[i]),end=" ")
+else:
+   print("No solution found")
+
+
+
+
+from ortools.sat.python import cp_model
+model = cp_model.CpModel()
+sudoku = [
+   [4,0,2,0],
+   [0,0,0,3],
+   [0,4,0,0],
+   [1,0,0,0]
+]
+cells ={}
+for r in range(4):
+   for c in range(4):
+       cells[(r,c)] = model.NewIntVar(1,4,f'cell_{r}_{c}')
+
+
+for r in range(4):
+   for c in range(4):
+       if sudoku[r][c] != 0:
+           model.add(cells[(r,c)]==sudoku[r][c])
+
+
+for r in range(4):
+   model.AddAllDifferent([cells[(r,c)] for c in range(4)])
+for c in range(4):
+   model.AddAllDifferent([cells[(r,c)] for r in range(4)])
+
+
+for br in range(0,4,2):
+   for bc in range(0,4,2):
+       box = []
+       for r in range(br,br+2):
+           for c in range(bc,bc+2):
+               box.append(cells[(r,c)])
+       model.AddAllDifferent(box)
+solver = cp_model.CpSolver()
+status = solver.Solve(model)
+if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+   print("Solution found:")
+   for r in range(4):
+       for c in range(4):
+           print(solver.Value(cells[(r,c)]),end=" ")
+       print()
+else:
+   print("Sodoku Not Solved")
+
+
+
+
+from ortools.sat.python import cp_model
+
+
+# Create the CSP model
+model = cp_model.CpModel()
+
+
+# Variables for each letter
+S = model.NewIntVar(1, 9, 'S')
+E = model.NewIntVar(0, 9, 'E')
+N = model.NewIntVar(0, 9, 'N')
+D = model.NewIntVar(0, 9, 'D')
+M = model.NewIntVar(1, 9, 'M')
+O = model.NewIntVar(0, 9, 'O')
+R = model.NewIntVar(0, 9, 'R')
+Y = model.NewIntVar(0, 9, 'Y')
+
+
+# All letters must have different digits
+model.AddAllDifferent([S, E, N, D, M, O, R, Y])
+
+
+# SEND + MORE = MONEY
+model.Add(
+   1000*S + 100*E + 10*N + D +
+   1000*M + 100*O + 10*R + E ==
+   10000*M + 1000*O + 100*N + 10*E + Y
+)
+
+
+# Solve the CSP
+solver = cp_model.CpSolver()
+status = solver.Solve(model)
+
+
+# Output the solution
+if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+   print("Solution Found:")
+   print(f"S = {solver.Value(S)}")
+   print(f"E = {solver.Value(E)}")
+   print(f"N = {solver.Value(N)}")
+   print(f"D = {solver.Value(D)}")
+   print(f"M = {solver.Value(M)}")
+   print(f"O = {solver.Value(O)}")
+   print(f"R = {solver.Value(R)}")
+   print(f"Y = {solver.Value(Y)}")
+else:
+   print("No solution found")
+
+
+from ortools.sat.python import cp_model
+
+
+# Create model
+model = cp_model.CpModel()
+
+
+num_courses = 4
+num_slots = 3
+num_rooms = 2
+
+
+# Variables
+slots = [model.NewIntVar(1, 3, f"C{i+1}_Slot") for i in range(num_courses)]
+rooms = [model.NewIntVar(1, 2, f"C{i+1}_Room") for i in range(num_courses)]
+
+
+# ---------------------------------
+# Constraint 1: C1 and C2 not same slot
+# ---------------------------------
+model.Add(slots[0] != slots[1])
+
+
+# ---------------------------------
+# Constraint 2: C4 cannot be in slot 1
+# ---------------------------------
+model.Add(slots[3] != 1)
+
+
+# ---------------------------------
+# Constraint 3: C3 must be in Room R1
+# ---------------------------------
+model.Add(rooms[2] == 1)
+
+
+# ---------------------------------
+# Constraint 4: No same room at same time
+# ---------------------------------
+for i in range(num_courses):
+   for j in range(i + 1, num_courses):
+       same_room = model.NewBoolVar(f"same_room_{i}_{j}")
+       same_slot = model.NewBoolVar(f"same_slot_{i}_{j}")
+
+
+       model.Add(rooms[i] == rooms[j]).OnlyEnforceIf(same_room)
+       model.Add(rooms[i] != rooms[j]).OnlyEnforceIf(same_room.Not())
+
+
+       model.Add(slots[i] == slots[j]).OnlyEnforceIf(same_slot)
+       model.Add(slots[i] != slots[j]).OnlyEnforceIf(same_slot.Not())
+
+
+       # If same room → must NOT be same slot
+       model.Add(slots[i] != slots[j]).OnlyEnforceIf(same_room)
+
+
+# Solve
+solver = cp_model.CpSolver()
+status = solver.Solve(model)
+
+
+# Output
+if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+   print("Solution Found:\n")
+   print("Course   Slot   Room")
+   for i in range(num_courses):
+       print(f"C{i+1}       {solver.Value(slots[i])}      R{solver.Value(rooms[i])}")
+else:
+   print("No solution found")
+
+
+from ortools.sat.python import cp_model
+model = cp_model.CpModel()
+
+
+num_exams = 4
+num_halls = 2
+num_slot = 3
+
+
+slots = [model.NewIntVar(1,3,f"E{i+1}_Slot") for i in range(num_exams)]
+halls = [model.NewIntVar(1,2,f"E{i+1}_Hall") for i in range(num_exams)]
+
+
+model.add(slots[0] != slots[1])
+is_E3_H1 = model.NewBoolVar("E3_H1")
+model.add(halls[2]==1).OnlyEnforceIf(is_E3_H1)
+model.add(halls[2]!=1).OnlyEnforceIf(is_E3_H1.Not())
+model.add(slots[3]==3).OnlyEnforceIf(is_E3_H1)
+
+
+for i in range(num_exams):
+   for j in range(i+1,num_exams):
+
+
+       same_hall = model.NewBoolVar(f'same_hall_{i}_{j}')
+       same_slot = model.NewBoolVar(f'same_slot_{i}_{j}')
+
+
+       model.add(halls[i]==halls[j]).OnlyEnforceIf(same_hall)
+       model.add(halls[i]!=halls[j]).OnlyEnforceIf(same_hall.Not())
+
+
+       model.Add(slots[i] == slots[j]).OnlyEnforceIf(same_slot)
+       model.Add(slots[i] != slots[j]).OnlyEnforceIf(same_slot.Not())
+
+
+       model.add(slots[i]!=slots[j]).OnlyEnforceIf(same_hall)
+
+
+solver = cp_model.CpSolver()
+status = solver.Solve(model)
+
+
+if status== cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+   print("Exam   Slot   Hall")
+   for i in range(num_exams):
+       print(f'E{i}       {solver.Value(slots[i])}      H{solver.Value(halls[i])}')
+else:
+   print("Solution Not Found")
+
+
+from ortools.sat.python import cp_model
+
+
+# Create model
+model = cp_model.CpModel()
+
+
+employees = ["A", "B", "C", "D", "E"]
+days = 3
+num_emp = len(employees)
+
+
+# 0 = Morning, 1 = Evening
+shift = {}
+for e in range(num_emp):
+   for d in range(days):
+       shift[(e, d)] = model.NewIntVar(0, 1, f"{employees[e]}_Day{d+1}")
+
+
+# Seniors: A (0), D (3)
+seniors = {0, 3}
+
+
+# ------------------------------------------------
+# Constraint 2: Same shift same day → at least one senior
+# ------------------------------------------------
+for d in range(days):
+   for i in range(num_emp):
+       for j in range(i + 1, num_emp):
+
+
+           same_shift = model.NewBoolVar(f"same_shift_{i}_{j}_day{d}")
+
+
+           model.Add(shift[(i, d)] == shift[(j, d)]).OnlyEnforceIf(same_shift)
+           model.Add(shift[(i, d)] != shift[(j, d)]).OnlyEnforceIf(same_shift.Not())
+
+
+           # If same shift and neither is senior → forbidden
+           if i not in seniors and j not in seniors:
+               model.Add(same_shift == 0)
+
+
+# ------------------------------------------------
+# Constraint 3: If A Evening on Day 1 → B not Morning Day 1
+# ------------------------------------------------
+A_evening_day1 = model.NewBoolVar("A_evening_day1")
+
+
+model.Add(shift[(0, 0)] == 1).OnlyEnforceIf(A_evening_day1)
+model.Add(shift[(0, 0)] != 1).OnlyEnforceIf(A_evening_day1.Not())
+
+
+model.Add(shift[(1, 0)] != 0).OnlyEnforceIf(A_evening_day1)
+
+
+# ------------------------------------------------
+# Constraint 4: C must work Morning at least once
+# ------------------------------------------------
+c_morning = []
+for d in range(days):
+   is_morning = model.NewBoolVar(f"C_morning_day{d+1}")
+   model.Add(shift[(2, d)] == 0).OnlyEnforceIf(is_morning)
+   model.Add(shift[(2, d)] != 0).OnlyEnforceIf(is_morning.Not())
+   c_morning.append(is_morning)
+
+
+model.Add(sum(c_morning) >= 1)
+
+
+# ------------------------------------------------
+# Solve
+# ------------------------------------------------
+solver = cp_model.CpSolver()
+status = solver.Solve(model)
+
+
+# ------------------------------------------------
+# Output
+# ------------------------------------------------
+if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+   print("Employee Shift Schedule:\n")
+   for e in range(num_emp):
+       print(f"Employee {employees[e]}:")
+       for d in range(days):
+           s = "Morning" if solver.Value(shift[(e, d)]) == 0 else "Evening"
+           print(f"  Day {d+1}: {s}")
+       print()
+else:
+   print("No feasible solution found")
+
+
+
+
+from ortools.sat.python import cp_model
+model = cp_model.CpModel()
+
+
+num_courses = 4
+num_labs = 2
+num_slots = 3
+slots = [model.NewIntVar(1,3,f'C{i}_slot')for i in range(num_courses)]
+labs = [model.NewIntVar(1,2,f'C{i}_lab') for i in range(num_courses)]
+
+
+is_C1_L1 = model.NewBoolVar('C1_L1')
+model.add(labs[0]==1).OnlyEnforceIf(is_C1_L1)
+model.add(labs[0]!=1).OnlyEnforceIf((is_C1_L1.Not()))
+model.add(slots[2]==2).OnlyEnforceIf(is_C1_L1)
+
+
+model.add(labs[3]!=2)
+
+
+for i in range(num_courses):
+   for j in range(i+1,num_courses):
+
+
+       same_lab = model.NewBoolVar('same_lab_{i}_{j}')
+       same_slot = model.NewBoolVar('same_slot_{i}_{j}')
+
+
+       model.add(labs[i]==labs[j]).OnlyEnforceIf(same_lab)
+       model.add(labs[i]!=labs[j]).OnlyEnforceIf(same_lab.Not())
+
+
+       model.add(slots[i]==slots[j]).OnlyEnforceIf(same_slot)
+       model.add(slots[i]!=slots[j]).OnlyEnforceIf((same_slot.Not()))
+
+
+       model.add(slots[i]!=slots[j]).OnlyEnforceIf(same_lab)
+
+
+solver = cp_model.CpSolver()
+status = solver.Solve(model)
+if status == cp_model.OPTIMAL or status==cp_model.FEASIBLE:
+   print("Course   Slot   Lab")
+   for i in range(num_courses):
+       print(f'C{i}      {solver.Value(slots[i])}      {solver.Value(labs[i])}')
+else:
+   print("No Solution Found")
+
+
+from ortools.sat.python import cp_model
+model = cp_model.CpModel()
+
+
+num_doc = 4
+num_ward = 2
+num_shifts = 3
+
+
+shifts = [model.NewIntVar(1,3,f'D{i}_shift') for i in range(num_doc)]
+wards = [model.NewIntVar(1,2,f'D{i}_ward') for i in range(num_doc)]
+
+
+model.add(wards[2]==1)
+
+
+is_D1_S3 = model.NewBoolVar('D1_S3')
+model.add(shifts[0]==3).OnlyEnforceIf(is_D1_S3)
+model.add(shifts[0]!=3).OnlyEnforceIf(is_D1_S3.Not())
+model.add(shifts[1]==1).OnlyEnforceIf(is_D1_S3)
+
+
+for i in range(num_doc):
+   for j in range(i+1,num_doc):
+
+
+       same_shift = model.NewBoolVar(f'same_shift_{i}_{j}')
+       same_ward = model.NewBoolVar(f'same_ward_{i}_{j}')
+
+
+       model.add(shifts[i]==shifts[j]).OnlyEnforceIf(same_shift)
+       model.add(shifts[i]!=shifts[j]).OnlyEnforceIf(same_shift.Not())
+
+
+       model.add(wards[i]==wards[j]).OnlyEnforceIf(same_ward)
+       model.add(wards[i]!=wards[j]).OnlyEnforceIf(same_ward.Not())
+
+
+       model.add(shifts[i]!=shifts[j]).OnlyEnforceIf(same_ward)
+
+
+solver = cp_model.CpSolver()
+status = solver.Solve(model)
+if status == cp_model.OPTIMAL or status==cp_model.FEASIBLE:
+   print("Doc  Shift    Ward")
+   for i in range(num_doc):
+       print(f'D{i}      {solver.Value(shifts[i])}      {solver.Value(wards[i])}')
+else:
+   print("No Solution Found")
+
+
+
+
+
+
+
+
+
+
+
+
+MINIMAX:
+GOAL = 4
+DEPTH_LIMIT = 3
+
+
+def heuristic(max_pos):
+   h = 10 - abs(GOAL - max_pos)
+   print(f"Leaf heuristic (Max at {max_pos}): {h}")
+   return h
+
+
+def minimax(max_pos, min_pos, depth, is_max):
+   # Terminal states
+   if max_pos == GOAL:
+       return 10
+   if max_pos == min_pos:
+       return -10
+   if depth == 0:
+       return heuristic(max_pos)
+
+
+   if is_max:
+       best = -100
+       new_pos = min(max_pos + 1, GOAL)
+       val = minimax(new_pos, min_pos, depth - 1, False)
+       best = max(best, val)
+       return best
+   else:
+       best = 100
+       for move in [min_pos, min_pos - 1]:
+           if move >= 0:
+               val = minimax(max_pos, move, depth - 1, True)
+               best = min(best, val)
+       return best
+
+
+def best_move(max_pos, min_pos, depth):
+   move_pos = max_pos + 1
+   score = minimax(move_pos, min_pos, depth - 1, False)
+   print(f"Chosen Move: Max -> {move_pos}, Value: {score}")
+   return move_pos
+print("STATE 1")
+max_pos, min_pos = 0, 2
+max_pos = best_move(max_pos, min_pos, 3)
+
+
+print("\nSTATE 2")
+min_pos = 2
+max_pos = best_move(max_pos, min_pos, 3)
+
+
+print("\nSTATE 3")
+min_pos = 3
+max_pos = best_move(max_pos, min_pos, 3)
+
+
+import math
+
+
+AI = 'X'
+HUMAN = 'O'
+EMPTY = ' '
+
+
+pruned_nodes = 0
+max_depth_reached = 0
+
+
+# ---------------- Board Utilities ----------------
+
+
+def print_board(board):
+   for i in range(3):
+       print(board[i*3:(i+1)*3])
+   print()
+
+
+def is_winner(board, player):
+   win_patterns = [
+       [0,1,2],[3,4,5],[6,7,8],
+       [0,3,6],[1,4,7],[2,5,8],
+       [0,4,8],[2,4,6]
+   ]
+   return any(all(board[i] == player for i in p) for p in win_patterns)
+
+
+def is_draw(board):
+   return EMPTY not in board
+
+
+def evaluate(board):
+   if is_winner(board, AI):
+       return 10
+   if is_winner(board, HUMAN):
+       return -10
+   return 0
+
+
+# ---------------- Alpha-Beta Minimax ----------------
+
+
+def alpha_beta(board, depth, alpha, beta, is_max):
+   global pruned_nodes, max_depth_reached
+   max_depth_reached = max(max_depth_reached, depth)
+
+
+   score = evaluate(board)
+   if score != 0 or is_draw(board):
+       return score
+
+
+   if is_max:
+       best = -math.inf
+       for i in range(9):
+           if board[i] == EMPTY:
+               board[i] = AI
+               val = alpha_beta(board, depth + 1, alpha, beta, False)
+               board[i] = EMPTY
+               best = max(best, val)
+               alpha = max(alpha, best)
+
+
+               if beta <= alpha:
+                   pruned_nodes += 1
+                   break
+       return best
+   else:
+       best = math.inf
+       for i in range(9):
+           if board[i] == EMPTY:
+               board[i] = HUMAN
+               val = alpha_beta(board, depth + 1, alpha, beta, True)
+               board[i] = EMPTY
+               best = min(best, val)
+               beta = min(beta, best)
+
+
+               if beta <= alpha:
+                   pruned_nodes += 1
+                   break
+       return best
+
+
+# ---------------- AI Move ----------------
+
+
+def best_move(board):
+   best_val = -math.inf
+   move = -1
+   for i in range(9):
+       if board[i] == EMPTY:
+           board[i] = AI
+           move_val = alpha_beta(board, 1, -math.inf, math.inf, False)
+           board[i] = EMPTY
+           if move_val > best_val:
+               best_val = move_val
+               move = i
+   return move
+
+
+# ---------------- Game Loop ----------------
+
+
+board = [EMPTY] * 9
+print("Initial Board:")
+print_board(board)
+
+
+while True:
+   # AI Move
+   ai_move = best_move(board)
+   board[ai_move] = AI
+   print(f"AI plays at position {ai_move}")
+   print_board(board)
+
+
+   if is_winner(board, AI):
+       print("AI wins!")
+       break
+   if is_draw(board):
+       print("Draw!")
+       break
+
+
+   # Human Move
+   move = int(input("Enter your move (0-8): "))
+   if board[move] != EMPTY:
+       print("Invalid move!")
+       continue
+   board[move] = HUMAN
+
+
+   if is_winner(board, HUMAN):
+       print("You win!")
+       break
+   if is_draw(board):
+       print("Draw!")
+       break
+
+
+print("\n--- Alpha-Beta Stats ---")
+print("Max Depth Explored:", max_depth_reached)
+print("Pruned Moves:", pruned_nodes)
+
+
+import math
+
+
+class Node:
+   def __init__(self, value=None):
+       self.value = value
+       self.children = []
+       self.minmax_value = None
+
+
+class MinimaxAgent:
+   def __init__(self, depth):
+       self.depth = depth
+
+
+   def formulate_goal(self, node):
+       # in Minimax, the goal is to compute the minimax value for the root node
+       return "Goal reached" if node.minmax_value is not None else "Searching"
+
+
+   def act(self, node, environment):
+       goal_status = self.formulate_goal(node)
+       if goal_status == "Goal reached":
+           return f"Minimax value for root node: {node.minmax_value}"
+       else:
+           return environment.compute_minimax(node, self.depth)
+
+
+class Environment:
+   def __init__(self, tree):
+       self.tree = tree
+       self.computed_nodes = []
+
+
+   def get_percept(self, node):
+       return node
+
+
+   def compute_minimax(self, node, depth, maximizing_player=True):
+       if depth == 0 or not node.children:
+           self.computed_nodes.append(node.value)
+           return node.value
+
+
+       if maximizing_player:
+           value = -math.inf
+           for child in node.children:
+               child_value = self.compute_minimax(child, depth - 1, False)
+               value = max(value, child_value)
+           node.minmax_value = value
+           self.computed_nodes.append(node.value)
+           return value
+       else:
+           value = math.inf
+           for child in node.children:
+               child_value = self.compute_minimax(child, depth - 1, True)
+               value = min(value, child_value)
+           node.minmax_value = value
+           self.computed_nodes.append(node.value)
+           return value
+
+
+def run_agent(agent, environment, start_node):
+   percept = environment.get_percept(start_node)
+   agent.act(percept, environment)
+
+
+# sample tree
+root = Node('A')
+n1 = Node('B')
+n2 = Node('C')
+root.children = [n1, n2]
+
+
+n3 = Node('D')
+n4 = Node('E')
+n5 = Node('F')
+n6 = Node('G')
+n1.children = [n3, n4]
+n2.children = [n5, n6]
+
+
+n7 = Node(2)
+n8 = Node(3)
+n9 = Node(5)
+n10 = Node(9)
+n3.children = [n7, n8]
+n4.children = [n9, n10]
+
+
+n11 = Node(0)
+n12 = Node(1)
+n13 = Node(7)
+n14 = Node(5)
+n5.children = [n11, n12]
+n6.children = [n13, n14]
+
+
+# define depth for Minimax
+depth = 3
+agent = MinimaxAgent(depth)
+environment = Environment(root)
+run_agent(agent, environment, root)
+
+
+print("Computed Nodes:", environment.computed_nodes)
+print("Minimax values:")
+print("A:", root.minmax_value)
+print("B:", n1.minmax_value)
+print("C:", n2.minmax_value)
+print("D:", n3.minmax_value)
+print("E:", n4.minmax_value)
+print("F:", n5.minmax_value)
+print("G:", n6.minmax_value)
+
+
+import math
+
+
+class Node:
+   def __init__(self,value=None):
+       self.value = value
+       self.children = []
+       self.minmax_value = None
+
+
+def minimax(node,depth,maxturn=True):
+   if depth == 0 or not node.children:
+       return node.value
+   if maxturn:
+       best_value = -math.inf
+       for child in node.children:
+           child_value = minimax(child, depth-1, False)
+           best_value = max(best_value, child_value)
+       node.minmax_value = best_value
+       return best_value
+   else:
+       best_value = math.inf
+       for child in node.children:
+           child_value = minimax(child, depth-1, True)
+           best_value = min(best_value, child_value)
+       node.minmax_value = best_value
+       return best_value
+
+
+n1 = Node(0)
+n2 = Node(0)
+n3 = Node(0)
+n1.children = [n2, n3]
+n4 = Node(0)
+n5 = Node(0)
+n6 = Node(0)
+n7 = Node(0)
+n2.children = [n4, n5]
+n3.children = [n6, n7]
+n8 = Node(2)
+n9 = Node(3)
+n4.children= [n8, n9]
+n10 = Node(5)
+n11 = Node(9)
+n5.children = [n10, n11]
+n12 = Node(0)
+n13 = Node(1)
+n6.children = [n12, n13]
+n14 = Node(7)
+n15 = Node(5)
+n7.children = [n14,n15]
+result = minimax(n1,3)
+print("Minimax values:")
+print("A:", n1.minmax_value)
+print("B:", n2.minmax_value)
+print("C:", n3.minmax_value)
+print("D:", n4.minmax_value)
+print("E:", n5.minmax_value)
+print("F:", n6.minmax_value)
+print("G:", n7.minmax_value)
+
+
+
+
+import math
+
+
+class Node:
+   def __init__(self, name=None, value=None):
+       self.name = name
+       self.value = value
+       self.children = []
+       self.minmax_value = None
+
+
+def minimax(node, depth, alpha, beta, maxturn=True):
+   # Added consistency fix: save the minmax_value for leaf nodes too
+   if depth == 0 or not node.children:
+       node.minmax_value = node.value
+       return node.value
+
+
+   if maxturn:
+       best_value = -math.inf
+       for child in node.children:
+           child_value = minimax(child, depth-1, alpha, beta, False)
+           best_value = max(best_value, child_value)
+           alpha = max(alpha, best_value)
+           if beta <= alpha:
+               print("Branch Pruned Node: ", node.name)
+               break
+       node.minmax_value = best_value
+       return best_value
+   else:
+       best_value = math.inf
+       for child in node.children:
+           child_value = minimax(child, depth-1, alpha, beta, True)
+           best_value = min(best_value, child_value)
+           beta = min(beta, best_value)
+           if beta <= alpha:
+               print("Branch Pruned at node: ", node.name)
+               break
+       node.minmax_value = best_value
+       return best_value
+
+
+# Internal Nodes
+n1 = Node('A', 0)
+n2 = Node('B', 0)
+n3 = Node('C', 0)
+n1.children = [n2, n3]
+
+
+n4 = Node('D', 0)
+n5 = Node('E', 0)
+n6 = Node('F', 0)
+n7 = Node('G', 0)
+n2.children = [n4, n5]
+n3.children = [n6, n7]
+
+
+# Leaf Nodes (FIXED: explicitly mapped to 'value')
+n8 = Node(value=2)
+n9 = Node(value=3)
+n4.children = [n8, n9]
+
+
+n10 = Node(value=5)
+n11 = Node(value=9)
+n5.children = [n10, n11]
+
+
+n12 = Node(value=0)
+n13 = Node(value=1)
+n6.children = [n12, n13]
+
+
+n14 = Node(value=7)
+n15 = Node(value=5)
+n7.children = [n14, n15]
+
+
+# Run Algorithm
+result = minimax(n1, 3, -math.inf, math.inf)
+
+
+print("\nMinimax values:")
+print("A:", n1.minmax_value)
+print("B:", n2.minmax_value)
+print("C:", n3.minmax_value)
+print("D:", n4.minmax_value)
+print("E:", n5.minmax_value)
+print("F:", n6.minmax_value)
+print("G:", n7.minmax_value)
+
+
+
+
+import math
+class Node:
+   def __init__(self, name=None, value=None):
+       self.name = name
+       self.value = value
+       self.children = []
+       self.minmax_value = None
+
+
+def alphabeta(node, depth, alpha, beta, maxturn=True):
+
+
+   # base case
+   if depth == 0 or not node.children:
+       node.minmax_value = node.value
+       return node.value
+
+
+   if maxturn:
+       best = -math.inf
+       for child in node.children:
+           value = alphabeta(child, depth-1, alpha, beta, False)
+           best = max(best, value)
+           alpha = max(alpha, best)
+
+
+           if beta <= alpha:
+               break
+       node.minmax_value = best
+       return best
+
+
+   else:
+       best = math.inf
+       for child in node.children:
+           value = alphabeta(child, depth-1, alpha, beta, True)
+           best = min(best, value)
+           beta = min(beta, best)
+
+
+           if beta <= alpha:
+               break
+       node.minmax_value = best
+       return best
+
+
+
+
+# Internal Nodes
+n1 = Node('A', 0)
+n2 = Node('B', 0)
+n3 = Node('C', 0)
+n1.children = [n2, n3]
+
+
+n4 = Node('D', 0)
+n5 = Node('E', 0)
+n6 = Node('F', 0)
+n7 = Node('G', 0)
+n2.children = [n4, n5]
+n3.children = [n6, n7]
+
+
+# Leaf Nodes (FIXED: explicitly mapped to 'value')
+n8 = Node(value=3)
+n9 = Node(value=5)
+n4.children = [n8, n9]
+
+
+n10 = Node(value=6)
+n11 = Node(value=9)
+n5.children = [n10, n11]
+
+
+n12 = Node(value=1)
+n13 = Node(value=2)
+n6.children = [n12, n13]
+
+
+n14 = Node(value=0)
+n15 = Node(value=-1)
+n7.children = [n14, n15]
+
+
+result = alphabeta(n1, 3, -math.inf, math.inf)
+print("\nMinimax values:")
+print("A:", n1.minmax_value)
+print("B:", n2.minmax_value)
+print("C:", n3.minmax_value)
+print("D:", n4.minmax_value)
+print("E:", n5.minmax_value)
+print("F:", n6.minmax_value)
+print("G:", n7.minmax_value)
+
+
+
+
+import math
+
+
+board = [
+   ['X', 'O', 'X'],
+   ['O', 'X', ' '],
+   ['O', 'X', ' ']
+]
+
+
+def check_winner(board):
+   lines = []
+   for i in range(3):
+       lines.append(board[i])
+       lines.append([board[0][i], board[1][i], board[2][i]])
+
+
+   lines.append([board[0][0], board[1][1], board[2][2]])
+   lines.append([board[0][2], board[1][1], board[2][0]])
+
+
+   if ['X','X','X'] in lines:
+       return 10
+   if ['O','O','O'] in lines:
+       return -10
+   return 0
+
+
+
+
+def moves_left(board):
+   for row in board:
+       if ' ' in row:
+           return True
+   return False
+
+
+
+
+def alphabeta(board, depth, alpha, beta, is_max):
+   score = check_winner(board)
+
+
+   if score != 0:
+       return score
+
+
+   if not moves_left(board):
+       return 0
+
+
+   if is_max:
+       best = -math.inf
+       for i in range(3):
+           for j in range(3):
+               if board[i][j] == ' ':
+                   board[i][j] = 'X'
+                   best = max(best, alphabeta(board, depth+1, alpha, beta, False))
+                   board[i][j] = ' '
+                   alpha = max(alpha, best)
+                   if beta <= alpha:
+                       return best
+       return best
+
+
+   else:
+       best = math.inf
+       for i in range(3):
+           for j in range(3):
+               if board[i][j] == ' ':
+                   board[i][j] = 'O'
+                   best = min(best, alphabeta(board, depth+1, alpha, beta, True))
+                   board[i][j] = ' '
+                   beta = min(beta, best)
+                   if beta <= alpha:
+                       return best
+       return best
+def best_move(board):
+   best_val = -math.inf
+   move = (-1, -1)
+
+
+   for i in range(3):
+       for j in range(3):
+           if board[i][j] == ' ':
+               board[i][j] = 'X'
+               move_val = alphabeta(board, 0, -math.inf, math.inf, False)
+               board[i][j] = ' '
+
+
+               if move_val > best_val:
+                   best_val = move_val
+                   move = (i, j)
+
+
+   return move
+
+
+print("Game Value:", alphabeta(board, 0, -math.inf, math.inf, True))
+print("Best Move for X:", best_move(board))
