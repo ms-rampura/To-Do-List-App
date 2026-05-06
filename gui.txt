@@ -1,0 +1,1417 @@
+﻿SHARED MEMORY
+Q1_C_Producer:
+#include <stdio.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <string.h>
+
+
+#define SHM_SIZE 4096
+#define SHM_NAME "/os_1c"
+
+
+int main() {
+   int fd;
+   char *ptr;
+   char buffer[100];
+
+
+   fd = shm_open(SHM_NAME, O_CREAT | O_RDWR, 0666);
+   if (fd == -1) {
+       perror("shm_open failed");
+       return 1;
+   }
+
+
+   if (ftruncate(fd, SHM_SIZE) == -1) {
+       perror("ftruncate failed");
+       return 1;
+   }
+
+
+   ptr = mmap(NULL, SHM_SIZE, PROT_WRITE, MAP_SHARED, fd, 0);
+   if (ptr == MAP_FAILED) {
+       perror("mmap failed");
+       return 1;
+   }
+
+
+   char *write_ptr = ptr;
+
+
+   for (int i = 0; i < 5; i++) {
+       printf("Enter string %d: ", i + 1);
+       fgets(buffer, sizeof(buffer), stdin);
+
+
+       strcpy(write_ptr, buffer);
+       write_ptr += strlen(buffer) + 1;   // move to next slot
+   }
+
+
+   munmap(ptr, SHM_SIZE);
+   close(fd);
+
+
+   return 0;
+}
+
+
+Q1_C_Consumer:
+#include <stdio.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <ctype.h>
+#include <string.h>
+
+
+#define SHM_SIZE 4096
+#define SHM_NAME "/os_1c"
+
+
+int main() {
+   int fd;
+   char *ptr;
+
+
+   fd = shm_open(SHM_NAME, O_RDONLY, 0666);
+   if (fd == -1) {
+       perror("shm_open failed");
+       return 1;
+   }
+
+
+   ptr = mmap(NULL, SHM_SIZE, PROT_READ, MAP_SHARED, fd, 0);
+   if (ptr == MAP_FAILED) {
+       perror("mmap failed");
+       return 1;
+   }
+
+
+   char *read_ptr = ptr;
+
+
+   for (int i = 0; i < 5; i++) {
+       char temp[100];
+       strcpy(temp, read_ptr);
+
+
+       // Convert to uppercase
+       for (int j = 0; temp[j]; j++) {
+           temp[j] = toupper(temp[j]);
+       }
+
+
+       printf("Uppercase String %d: %s", i + 1, temp);
+
+
+       read_ptr += strlen(read_ptr) + 1;
+   }
+
+
+   munmap(ptr, SHM_SIZE);
+   close(fd);
+   shm_unlink(SHM_NAME);
+
+
+   return 0;
+}
+
+
+ORDINARY PIPES WITH FORK:
+Q2_B:
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+
+int factorial(int n){
+   int p = 1;
+   for (int i = 1; i <= n; i++)
+   {
+       p = p*i;
+   }
+   return p;
+}
+
+
+int arr[5];
+int fac[5];
+int main() {
+   int p2c[2];
+   int c2p[2];
+   if (pipe(p2c)<0)
+   {
+       printf("Error Occure while piping p2c\n");
+       return 1;
+   }
+   if (pipe(c2p)<0)
+   {
+       printf("Error Occured while piping c2p\n");
+   }
+   pid_t pid = fork();
+   if(pid>0){
+       close(p2c[0]);
+       close(c2p[1]);
+       printf("Parent Process\n");
+       printf("Enter 5 integers One by One:\n");
+       for (int i = 0; i < 5; i++)
+       {
+           scanf("%d",&arr[i]);
+       }
+       write(p2c[1],arr,sizeof(arr));
+       close(p2c[1]);
+       read(c2p[0],fac,sizeof(fac));
+       for (int i = 0; i < 5; i++)
+       {
+           printf("Factorial: %d\n",fac[i]);
+       }
+       close(c2p[0]);
+       wait(NULL);
+       printf("\nParent Exiting....\n");
+   }else if(pid==0){
+       close(p2c[1]);
+       close(c2p[0]);
+       read(p2c[0],arr,sizeof(arr));
+       printf("\nChild Process Calculating Factorials:\n\n");
+       for (int i = 0; i < 5; i++)
+       {
+           fac[i] = factorial(arr[i]);
+       }
+       close(p2c[1]);
+       write(c2p[1],fac,sizeof(fac));
+       close(c2p[1]);
+       exit(0);
+   }
+   else{
+       printf("Error Occured while forking\n");
+       return 1;
+   }
+   return 0;
+}
+
+
+NAMED PIPE:
+Q1_E writer:
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <string.h>
+
+
+#define FIFO "/tmp/myfifo"
+int main() {
+   int fd;
+   char buffer[100];
+   mkfifo(FIFO,0666);
+   fd = open(FIFO,O_WRONLY);
+   if (fd<0)
+   {
+       printf("Error occured while opening the fifo file\n");
+       return 1;
+   }
+   for (int i = 0; i < 5; i++)
+   {
+       printf("String %d: ",i+1);
+       fgets(buffer,sizeof(buffer),stdin);
+       write(fd,buffer,sizeof(buffer));
+   }
+   close(fd);
+   unlink(FIFO);
+   return 0;
+}
+
+
+Q1_E reader:
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <string.h>
+
+
+#define FIFO "/tmp/myfifo"
+
+
+void reverse(char* buffer){
+   int i=0;
+   int j = strlen(buffer)-1;
+   while(i<j){
+       char temp = buffer[i];
+       buffer[i] = buffer[j];
+       buffer[j] = temp;
+       i++;
+       j--;
+   }
+}
+int main() {
+   int fd;
+   char buffer[100];
+   fd = open(FIFO,O_RDONLY);
+   if (fd<0)
+   {
+       printf("Error occured while opening the fifo file\n");
+       return 1;
+   }
+   for (int i = 0; i < 5; i++)
+   {
+  
+       read(fd,buffer,sizeof(buffer));
+       reverse(buffer);
+       printf("Reverse String %d: %s\n",i+1,buffer);
+   }
+   close(fd);
+   return 0;
+}
+
+
+SIGNAL:
+Q2_C:
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <signal.h>
+#include <sys/wait.h>
+
+
+/* ---------- Child 1 SIGINT Handler ---------- */
+void sigint_handler(int signo) {
+   printf("Child 1: SIGINT received! I will not terminate.\n");
+}
+
+
+/* ---------- Child 2 SIGTERM Handler ---------- */
+void sigterm_handler(int signo) {
+   printf("Child 2: SIGTERM received! Shutting down gracefully. Goodbye!\n");
+   exit(0);
+}
+
+
+int main() {
+   pid_t pid1, pid2;
+
+
+   /* ---------- Create Child 1 ---------- */
+   pid1 = fork();
+
+
+   if (pid1 == 0) {
+       // Child 1 process
+       struct sigaction sa1;
+       sa1.sa_handler = sigint_handler;
+       sigemptyset(&sa1.sa_mask);
+       sa1.sa_flags = 0;
+
+
+       sigaction(SIGINT, &sa1, NULL);
+
+
+       printf("Child 1 running (PID: %d). Waiting for SIGINT...\n", getpid());
+
+
+       while (1) {
+           pause();   // wait for signal
+       }
+   }
+
+
+   /* ---------- Create Child 2 ---------- */
+   pid2 = fork();
+
+
+   if (pid2 == 0) {
+       // Child 2 process
+       struct sigaction sa2;
+       sa2.sa_handler = sigterm_handler;
+       sigemptyset(&sa2.sa_mask);
+       sa2.sa_flags = 0;
+
+
+       sigaction(SIGTERM, &sa2, NULL);
+
+
+       printf("Child 2 running (PID: %d). Waiting for SIGTERM...\n", getpid());
+
+
+       while (1) {
+           pause();   // wait for signal
+       }
+   }
+
+
+   /* ---------- Parent Process ---------- */
+   printf("Parent waiting for both children...\n");
+
+
+   wait(NULL);
+   wait(NULL);
+
+
+   printf("Parent: Both children have terminated.\n");
+
+
+   return 0;
+}
+
+
+Q2_D:
+#include <stdio.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
+
+int count = 0;
+
+
+/* ---------- SIGALRM Handler ---------- */
+void sigalrm_handler(int signo) {
+   printf("Timer fired!\n");
+   count++;
+
+
+   if (count < 4) {
+       alarm(2);   // reset alarm
+   }
+}
+
+
+int main() {
+   struct sigaction sa;
+   pid_t pid;
+
+
+   /* ---------- Setup SIGALRM ---------- */
+   sa.sa_handler = sigalrm_handler;
+   sigemptyset(&sa.sa_mask);
+   sa.sa_flags = 0;
+
+
+   if (sigaction(SIGALRM, &sa, NULL) == -1) {
+       printf("Error setting signal handler\n");
+       return 1;
+   }
+
+
+   /* ---------- Fork Process ---------- */
+   pid = fork();
+
+
+   if (pid < 0) {
+       printf("Error occurred while forking\n");
+       return 1;
+   }
+
+
+   /* ---------- Child Process ---------- */
+   else if (pid == 0) {
+       printf("Child process started (PID=%d)\n", getpid());
+
+
+       for (int i = 1; i <= 10; i++) {
+           printf("Child counting: %d\n", i);
+           sleep(1);
+       }
+
+
+       printf("Child finished counting.\n");
+       exit(0);
+   }
+
+
+   /* ---------- Parent Process ---------- */
+   else {
+       printf("Parent started (PID=%d)\n", getpid());
+
+
+       alarm(2);  // first alarm after 2 seconds
+
+
+       while (count < 4) {
+           pause();  // wait for signal
+       }
+
+
+       printf("Parent: Alarm fired 4 times. Exiting.\n");
+
+
+       wait(NULL); // wait for child
+   }
+
+
+   return 0;
+}
+
+
+Q2_E:
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <signal.h>
+#include <sys/wait.h>
+#include <time.h>
+
+
+#define NUM_CHILDREN 5
+
+
+int children_left = NUM_CHILDREN;
+
+
+/* SIGCHLD handler */
+void sigchld_handler(int signo) {
+   int status;
+   pid_t pid;
+
+
+   /* Reap all finished children */
+   while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+       if (WIFEXITED(status)) {
+           printf("Parent: Child PID=%d exited with status=%d\n",
+                  pid, WEXITSTATUS(status));
+       }
+       children_left--;
+   }
+}
+
+
+int main() {
+   struct sigaction sa;
+   pid_t pid;
+
+
+   /* Setup SIGCHLD handler */
+   sa.sa_handler = sigchld_handler;
+   sigemptyset(&sa.sa_mask);
+   sa.sa_flags = SA_RESTART;   // Restart interrupted syscalls
+
+
+   sigaction(SIGCHLD, &sa, NULL);
+
+
+   srand(time(NULL));
+
+
+   /* Fork children */
+   for (int i = 0; i < NUM_CHILDREN; i++) {
+       pid = fork();
+
+
+       if (pid == 0) {  // Child
+           int sleep_time = (rand() % 3) + 1;
+           sleep(sleep_time);
+           exit(i);     // Exit with index as status
+       }
+   }
+
+
+   /* Parent waits until all children are reaped */
+   while (children_left > 0) {
+       pause();
+   }
+
+
+   printf("Parent: All children have been reaped.\n");
+   return 0;
+}
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <signal.h>
+#include <sys/wait.h>
+#include <sys/resource.h>
+#include <unistd.h>
+
+
+void proc_exit() {
+   int wstat;
+   pid_t pid;
+
+
+   while (1) {
+       // Get info about child process (non-blocking)
+       pid = wait3(&wstat, WNOHANG, NULL);
+
+
+       if (pid == 0 || pid == -1) {
+           fprintf(stdout, "return value of wait3() is %d\n", pid);
+           return;
+       }
+
+
+       fprintf(stdout, "Return code: %d\n", wstat);
+   }
+}
+
+
+int main() {
+   // Register signal handler
+   signal(SIGCHLD, proc_exit);
+
+
+   switch (fork()) {
+
+
+       case -1:
+           perror("main: fork");
+           exit(1);
+
+
+       case 0: {
+           // Child process
+           printf("I'm alive (temporarily)\n");
+
+
+           int ret_code = rand() % 100;
+           printf("Return code is %d\n", ret_code);
+
+
+           exit(ret_code);
+       }
+
+
+       default:
+           // Parent process waits for signal
+           pause();
+   }
+
+
+   exit(0);
+}
+
+
+
+
+#include <stdio.h>
+#include <unistd.h>
+
+
+int main() {
+   pid_t pid = fork();
+
+
+   if (pid == 0) {
+       // Child process
+       printf("Child exiting with id %d...\n", pid);
+       return 0;
+   } else {
+       // Parent process
+       printf("Parent sleeping...\n");
+       sleep(30); // parent does NOT call wait()
+   }
+
+
+   return 0;
+}
+
+
+
+
+//Run program, then in another terminal: ps -eo pid,ppid,state,cmd | grep Z
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <signal.h>
+#include <unistd.h>
+
+
+#define NUM_THREADS 4
+
+
+pthread_t threads[NUM_THREADS]; // Global array for thread IDs
+
+
+// Signal handler
+void sigusr1_handler(int signum) {
+   int tid = gettid();     // thread id (Linux specific)
+   int pid = getpid();     // process id
+   int ppid = getppid();   // parent process id
+
+
+   fprintf(stdout,
+       "Thread %lu received SIGUSR1 (pid=%d, ppid=%d, tid=%d)\n",
+       pthread_self(), pid, ppid, tid);
+}
+
+
+// Thread function
+void *thread_function(void *arg) {
+   // signal(SIGUSR1, sigusr1_handler); // optional (main already sets it)
+
+
+   while (1) {
+       sleep(1); // keep thread alive
+   }
+   return NULL;
+}
+
+
+int main() {
+   // Register signal handler
+   signal(SIGUSR1, sigusr1_handler);
+
+
+   // Create threads
+   for (int i = 0; i < NUM_THREADS; ++i) {
+       if (pthread_create(&threads[i], NULL, thread_function, NULL) != 0) {
+           perror("pthread_create");
+           exit(EXIT_FAILURE);
+       }
+   }
+
+
+   int pid = getpid();
+   int ppid = getppid();
+
+
+   printf("Process ID: %d, Parent ID: %d\n", pid, ppid);
+
+
+   printf("Thread IDs: %lu, %lu, %lu, %lu\n",
+          threads[0], threads[1], threads[2], threads[3]);
+ printf("------------------------------------\n");
+  printf("--------------Signal to Main Process-------------\n");
+   // Send signal to process
+   kill(pid, SIGUSR1);
+printf("-------------Signal to Thread3--------------\n");
+   // Send signal to specific thread (3rd thread)
+   pthread_kill(threads[2], SIGUSR1);
+
+
+   // Wait for threads
+   for (int i = 0; i < NUM_THREADS; ++i) {
+       if (pthread_join(threads[i], NULL) != 0) {
+           perror("pthread_join");
+           exit(EXIT_FAILURE);
+       }
+   }
+
+
+   return 0;
+}
+
+
+#include <stdio.h>
+#include <signal.h>
+#include <unistd.h>
+
+
+int main() {
+   sigset_t set;
+
+
+   sigemptyset(&set);           // empty set
+   sigaddset(&set, SIGINT);     // add Ctrl+C
+
+
+   sigprocmask(SIG_BLOCK, &set, NULL);  // block
+
+
+   printf("SIGINT blocked for 5 seconds\n");
+
+
+   sleep(5);
+
+
+   sigprocmask(SIG_UNBLOCK, &set, NULL); // unblock
+
+
+   printf("SIGINT unblocked\n");
+
+
+   while(1);
+
+
+   return 0;
+}
+
+
+MUTEX  & SEMAPHORES:
+Q3_C:
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <unistd.h>
+
+
+#define NUM_TELLERS 3
+#define NUM_CUSTOMERS 20
+
+
+sem_t teller_sem;
+pthread_mutex_t mutex;
+
+
+int teller_busy[NUM_TELLERS] = {0};  // 0 = free, 1 = busy
+
+
+void *customer(void *arg) {
+   int customer_id = *(int *)arg;
+   int teller_id = -1;
+
+
+   // Wait for an available teller
+   sem_wait(&teller_sem);
+
+
+   // Critical section: select a teller
+   pthread_mutex_lock(&mutex);
+   for (int i = 0; i < NUM_TELLERS; i++) {
+       if (teller_busy[i] == 0) {
+           teller_busy[i] = 1;
+           teller_id = i;
+           break;
+       }
+   }
+   pthread_mutex_unlock(&mutex);
+
+
+   // Serve customer
+   printf("Customer %d is being served by Teller %d\n",
+          customer_id, teller_id + 1);
+
+
+   sleep(rand() % 3 + 1);   // Simulate service time
+
+
+   printf("Customer %d finished at Teller %d\n",
+          customer_id, teller_id + 1);
+
+
+   // Free the teller
+   pthread_mutex_lock(&mutex);
+   teller_busy[teller_id] = 0;
+   pthread_mutex_unlock(&mutex);
+
+
+   // Signal teller availability
+   sem_post(&teller_sem);
+
+
+   pthread_exit(NULL);
+}
+
+
+int main() {
+   pthread_t customers[NUM_CUSTOMERS];
+   int customer_ids[NUM_CUSTOMERS];
+
+
+   srand(getpid());
+
+
+   // Initialize semaphore and mutex
+   sem_init(&teller_sem, 0, NUM_TELLERS);
+   pthread_mutex_init(&mutex, NULL);
+
+
+   // Create customer threads
+   for (int i = 0; i < NUM_CUSTOMERS; i++) {
+       customer_ids[i] = i + 1;
+       pthread_create(&customers[i], NULL, customer, &customer_ids[i]);
+       usleep(100000);  // Small delay for better output order
+   }
+
+
+   // Wait for all customers to finish
+   for (int i = 0; i < NUM_CUSTOMERS; i++) {
+       pthread_join(customers[i], NULL);
+   }
+
+
+   // Cleanup
+   sem_destroy(&teller_sem);
+   pthread_mutex_destroy(&mutex);
+
+
+   printf("\nAll customers have been served.\n");
+
+
+   return 0;
+}
+
+
+Q4_C:
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <unistd.h>
+
+
+#define FILE_NAME "shared_data.txt"
+
+
+sem_t sem;
+
+
+/* ---------- Writer Thread ---------- */
+void *writer(void *arg) {
+   FILE *fp;
+
+
+   fp = fopen(FILE_NAME, "w");
+   if (fp == NULL) {
+       perror("Writer: fopen failed");
+       exit(1);
+   }
+   char buffer[256];
+   fgets(buffer,sizeof(buffer),stdin);
+   fprintf(fp,"%s",buffer);
+   // fprintf(fp, "Hello from Writer Thread!\nThis data is synchronized using semaphores.\n");
+   printf("Writer: Data written to file.\n");
+
+
+   fclose(fp);
+
+
+   // Signal reader that data is ready
+   sem_post(&sem);
+
+
+   pthread_exit(NULL);
+}
+
+
+/* ---------- Reader Thread ---------- */
+void *reader(void *arg) {
+   FILE *fp;
+   char buffer[256];
+
+
+   // Wait for writer
+   sem_wait(&sem);
+
+
+   fp = fopen(FILE_NAME, "r");
+   if (fp == NULL) {
+       perror("Reader: fopen failed");
+       exit(1);
+   }
+
+
+   printf("Reader: Reading data from file:\n");
+
+
+   while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+       printf("%s", buffer);
+   }
+
+
+   fclose(fp);
+   printf("\nReader: Finished reading. Exiting program.\n");
+
+
+   pthread_exit(NULL);
+}
+
+
+int main() {
+   pthread_t writer_tid, reader_tid;
+
+
+   // Initialize semaphore (initial value = 0)
+   if (sem_init(&sem, 0, 0) != 0) {
+       perror("sem_init failed");
+       return 1;
+   }
+
+
+   // Create writer thread
+   if (pthread_create(&writer_tid, NULL, writer, NULL) != 0) {
+       perror("pthread_create writer failed");
+       return 1;
+   }
+
+
+   // Create reader thread
+   if (pthread_create(&reader_tid, NULL, reader, NULL) != 0) {
+       perror("pthread_create reader failed");
+       return 1;
+   }
+
+
+   // Wait for threads to complete
+   pthread_join(writer_tid, NULL);
+   pthread_join(reader_tid, NULL);
+
+
+   // Cleanup semaphore
+   sem_destroy(&sem);
+
+
+   return 0;
+}
+
+
+Q4_D:
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <sys/wait.h>
+#include <sys/types.h>
+#include <unistd.h>
+#define BUFFER_SIZE 5
+sem_t mutex, empty, full;
+int buffer[BUFFER_SIZE];
+int in = 0, out = 0;
+void *producer(void *arg)
+{
+   int item;
+   int count = 0;
+   while (1)
+   {
+       item = count+1;
+       sem_wait(&empty);
+       sem_wait(&mutex);
+       buffer[in] = item;
+       printf("Produced: %d\n", item);
+       in = (in + 1) % BUFFER_SIZE;
+       sem_post(&mutex);
+       sem_post(&full);
+       count++;
+       if(count==15){
+           break;
+       }
+       sleep(rand() % 3); // Simulate some processing time
+   }
+}
+void *consumer(void *arg)
+{
+   int item;
+   while (1)
+   {
+       sem_wait(&full);
+       sem_wait(&mutex);
+       item = buffer[out];
+       printf("Consumed: %d\n", item);
+       out = (out + 1) % BUFFER_SIZE;
+       sem_post(&mutex);
+       sem_post(&empty);
+       if (item==15)
+       {
+           printf("\nProgram Finished\n");
+           break;
+       }
+      
+       sleep(rand() % 3); // Simulate some processing time
+   }
+}
+int main()
+{
+   pthread_t producer_thread, consumer_thread;
+   // Initialize semaphores
+   sem_init(&mutex, 0, 1);
+   sem_init(&empty, 0, BUFFER_SIZE);
+   sem_init(&full, 0, 0);
+   // Create producer and consumer threads
+   pthread_create(&producer_thread, NULL, producer, NULL);
+   pthread_create(&consumer_thread, NULL, consumer, NULL);
+   // Join threads
+   pthread_join(producer_thread, NULL);
+   pthread_join(consumer_thread, NULL);
+   // Destroy semaphores
+   sem_destroy(&mutex);
+   sem_destroy(&empty);
+   sem_destroy(&full);
+   return 0;
+}
+
+
+Q3_E:
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+
+
+#define STUDENTS 50
+#define THREADS 5
+#define PER_THREAD 10
+
+
+typedef struct {
+   int marks[3];
+   float average;
+   char grade;
+} Student;
+
+
+Student students[STUDENTS];
+pthread_mutex_t mutex;
+
+
+/* Generate random marks */
+void generateMarks() {
+   for (int i = 0; i < STUDENTS; i++) {
+       for (int j = 0; j < 3; j++) {
+           students[i].marks[j] = rand() % 101;
+       }
+   }
+}
+
+
+/* Worker thread */
+void *SGC(void *arg) {
+   int tid = *(int *)arg;
+   int start = tid * PER_THREAD;
+   int end = start + PER_THREAD;
+
+
+   for (int i = start; i < end; i++) {
+       float sum = 0;
+       for (int j = 0; j < 3; j++)
+           sum += students[i].marks[j];
+
+
+       float avg = sum / 3.0;
+       char grade;
+
+
+       if (avg >= 85) grade = 'A';
+       else if (avg >= 70) grade = 'B';
+       else if (avg >= 50) grade = 'C';
+       else grade = 'F';
+
+
+       pthread_mutex_lock(&mutex);
+       students[i].average = avg;
+       students[i].grade = grade;
+       pthread_mutex_unlock(&mutex);
+   }
+   return NULL;
+}
+
+
+int main() {
+   pthread_t threads[THREADS];
+   int tid[THREADS];
+
+
+   srand(1);
+   pthread_mutex_init(&mutex, NULL);
+   generateMarks();
+
+
+   /* Create threads */
+   for (int i = 0; i < THREADS; i++) {
+       tid[i] = i;
+       pthread_create(&threads[i], NULL, SGC, &tid[i]);
+   }
+
+
+   /* Join threads */
+   for (int i = 0; i < THREADS; i++) {
+       pthread_join(threads[i], NULL);
+   }
+
+
+   /* Grade distribution */
+   int countA = 0, countB = 0, countC = 0, countF = 0;
+   int topStudent = 0;
+
+
+   for (int i = 0; i < STUDENTS; i++) {
+       if (students[i].average > students[topStudent].average)
+           topStudent = i;
+
+
+       switch (students[i].grade) {
+           case 'A': countA++; break;
+           case 'B': countB++; break;
+           case 'C': countC++; break;
+           case 'F': countF++; break;
+       }
+   }
+
+
+   /* Print summary */
+   printf("\nGrade Distribution:\n");
+   printf("A: %d\nB: %d\nC: %d\nF: %d\n",
+          countA, countB, countC, countF);
+
+
+   printf("\nTop Student: #%d\nAverage: %.2f\nGrade: %c\n",
+          topStudent + 1,
+          students[topStudent].average,
+          students[topStudent].grade);
+
+
+   pthread_mutex_destroy(&mutex);
+   return 0;
+}
+
+
+Q4_E:
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <unistd.h>
+
+
+sem_t rw, mutex;
+int read_count = 0;
+int shared_variable = 0;
+
+
+/* Writer */
+void *writer(void *arg) {
+   int wid = *(int *)arg;
+
+
+   sem_wait(&rw);
+
+
+   printf("\nWriter %d updating shared variable\n", wid);
+   shared_variable += rand() % 100;
+
+
+   printf("New value: %d\n", shared_variable);
+
+
+   sem_post(&rw);
+
+
+   pthread_exit(NULL);
+}
+
+
+/* Reader */
+void *reader(void *arg) {
+   int rid = *(int *)arg;
+
+
+   sem_wait(&mutex);
+   read_count++;
+
+
+   if (read_count == 1) {   // FIRST reader locks writer
+       sem_wait(&rw);
+   }
+
+
+   sem_post(&mutex);
+
+
+   printf("Reader %d read value: %d\n", rid, shared_variable);
+
+
+   sem_wait(&mutex);
+   read_count--;
+
+
+   if (read_count == 0) {   // LAST reader releases writer
+       sem_post(&rw);
+   }
+
+
+   sem_post(&mutex);
+
+
+   pthread_exit(NULL);
+}
+
+
+int main() {
+   pthread_t w[2], r[4];
+   int wid[2], rid[4];
+
+
+   srand(1);
+   shared_variable = rand() & 100;
+   sem_init(&mutex, 0, 1);
+   sem_init(&rw, 0, 1);
+
+
+   /* Create writers */
+   for (int i = 0; i < 2; i++) {
+       wid[i] = i + 1;
+       pthread_create(&w[i], NULL, writer, &wid[i]);
+   }
+
+
+   /* Create readers */
+   for (int i = 0; i < 4; i++) {
+       rid[i] = i + 1;
+       pthread_create(&r[i], NULL, reader, &rid[i]);
+   }
+
+
+   /* Join writers */
+   for (int i = 0; i < 2; i++) {
+       pthread_join(w[i], NULL);
+   }
+
+
+   /* Join readers */
+   for (int i = 0; i < 4; i++) {
+       pthread_join(r[i], NULL);
+   }
+
+
+   sem_destroy(&mutex);
+   sem_destroy(&rw);
+
+
+   return 0;
+}
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <semaphore.h>
+#include <sys/wait.h>
+#include <time.h>
+
+
+#define SHM_NAME "/pipeline_shm"
+#define SEM_S1 "/sem_s1"
+#define SEM_S2 "/sem_s2"
+
+
+typedef struct {
+   int value;
+} shared_data;
+
+
+int main() {
+
+
+   srand(time(NULL));
+
+
+   /* ---------- Shared Memory ---------- */
+   int shm_fd = shm_open(SHM_NAME, O_CREAT | O_RDWR, 0666);
+   ftruncate(shm_fd, sizeof(shared_data));
+
+
+   shared_data *data = mmap(NULL, sizeof(shared_data),
+                            PROT_READ | PROT_WRITE,
+                            MAP_SHARED, shm_fd, 0);
+
+
+   /* ---------- Semaphores ---------- */
+   sem_t *sem_s1 = sem_open(SEM_S1, O_CREAT, 0666, 0);
+   sem_t *sem_s2 = sem_open(SEM_S2, O_CREAT, 0666, 0);
+
+
+   /* ---------- Fork Stage 2 ---------- */
+   pid_t p2 = fork();
+
+
+   if (p2 == 0) {
+       /* ================= STAGE 2 (FILTER) ================= */
+       for (int i = 0; i < 20; i++) {
+
+
+           sem_wait(sem_s1);
+
+
+           int val = data->value;
+
+
+           if (val % 2 == 0) {
+               data->value = val;
+               printf("Stage2: Even passed = %d\n", val);
+               sem_post(sem_s2);
+           } else {
+               printf("Stage2: Odd discarded = %d\n", val);
+               sem_post(sem_s2); // still signal stage3
+           }
+       }
+       exit(0);
+   }
+
+
+   /* ---------- Fork Stage 3 ---------- */
+   pid_t p3 = fork();
+
+
+   if (p3 == 0) {
+       /* ================= STAGE 3 (AGGREGATOR) ================= */
+       int sum = 0, count = 0;
+
+
+       for (int i = 0; i < 20; i++) {
+
+
+           sem_wait(sem_s2);
+
+
+           int val = data->value;
+
+
+           if (val % 2 == 0) {
+               sum += val;
+               count++;
+               printf("Stage3: Added %d | Running Sum = %d\n", val, sum);
+           }
+       }
+
+
+       printf("\nFinal Even Count = %d\n", count);
+       printf("Final Sum = %d\n", sum);
+
+
+       exit(0);
+   }
+
+
+   /* ================= STAGE 1 (GENERATOR - PARENT) ================= */
+   for (int i = 0; i < 20; i++) {
+
+
+       int num = (rand() % 100) + 1;
+       data->value = num;
+
+
+       printf("Stage1: Generated %d\n", num);
+
+
+       sem_post(sem_s1);
+       sleep(1);
+   }
+
+
+   /* ---------- Wait for children ---------- */
+   wait(NULL);
+   wait(NULL);
+
+
+   /* ---------- Cleanup ---------- */
+   sem_close(sem_s1);
+   sem_close(sem_s2);
+
+
+   sem_unlink(SEM_S1);
+   sem_unlink(SEM_S2);
+
+
+   munmap(data, sizeof(shared_data));
+   shm_unlink(SHM_NAME);
+
+
+   printf("\nPipeline Completed Successfully\n");
+
+
+   return 0;
+}
